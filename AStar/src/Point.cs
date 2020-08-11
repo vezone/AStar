@@ -28,5 +28,15 @@
         {
             return !(a == b);
         }
-    }
+
+		public override int GetHashCode()
+		{
+			return (X << 16) ^ (Y << 8);
+		}
+
+		public override string ToString()
+		{
+			return $"{X}, {Y}";
+		}
+	}
 }

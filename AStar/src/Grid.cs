@@ -97,8 +97,8 @@ namespace AStar.src
 
         private bool IsPointInGrid(Point point)
         {
-            if (point.X > 0
-                && point.Y > 0 
+            if (point.X >= 0
+                && point.Y >= 0 
                 && point.X < ColumnLength 
                 && point.Y < RowLength) 
             { 
@@ -117,7 +117,24 @@ namespace AStar.src
             return false;
         }
 
-        public Point[] GetNeighbors(Point point)
+        public List<Point> GetNeighbors(Point point)
+        {
+            var list = new List<Point>();
+
+            var p0 = new Point(point.X, point.Y - 1);
+            var p1 = new Point(point.X + 1, point.Y);
+            var p2 = new Point(point.X, point.Y + 1);
+            var p3 = new Point(point.X - 1, point.Y);
+
+            if (IsPointInGrid(p0) && IsPointASpaceOrTarget(p0)) list.Add(p0);
+            if (IsPointInGrid(p1) && IsPointASpaceOrTarget(p1)) list.Add(p1);
+            if (IsPointInGrid(p2) && IsPointASpaceOrTarget(p2)) list.Add(p2);
+            if (IsPointInGrid(p3) && IsPointASpaceOrTarget(p3)) list.Add(p3);
+
+            return list;
+        }
+
+        public List<Point> GetWideNeighbors(Point point)
         {
             var list = new List<Point>();
             var p0 = new Point(point.X - 1, point.Y - 1);
@@ -138,7 +155,7 @@ namespace AStar.src
             if (IsPointInGrid(p6) && IsPointASpaceOrTarget(p6)) list.Add(p6);
             if (IsPointInGrid(p7) && IsPointASpaceOrTarget(p7)) list.Add(p7);
 
-            return list.ToArray(); 
+            return list; 
         }
     }
 }
