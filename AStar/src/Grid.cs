@@ -14,6 +14,7 @@ namespace AStar.src
         const char SPACE = '-';
         const char TARGET = 'T';
         const char HERO = 'H';
+        const char FOREST = 'F'; 
 
         public int RowLength => _rowLength;
         public int ColumnLength => _columnLength;
@@ -155,7 +156,21 @@ namespace AStar.src
             if (IsPointInGrid(p6) && IsPointASpaceOrTarget(p6)) list.Add(p6);
             if (IsPointInGrid(p7) && IsPointASpaceOrTarget(p7)) list.Add(p7);
 
-            return list; 
+            return list;
+        }
+
+        public int GetCostForPoint(Point to)
+        {
+            if (this[to] == SPACE)
+            {
+                return 1;
+            }
+            else if (this[to] == FOREST)
+            {
+                return 3;
+            }
+
+            return 2;
         }
     }
 }
