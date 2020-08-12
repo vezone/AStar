@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using AStar.src;
 using AStar.src.AStar;
 
@@ -189,10 +187,10 @@ namespace sandbox_project
                 }
 
                 if (visited.Contains(targetPos))
-				{
+				       {
                     SetGrid(visited, heroePos, targetPos, '+');
                     break;
-				}
+                }
 
                 DijkstraSearch(visited, 
                     prevPosDictWithCost, 
@@ -212,19 +210,20 @@ namespace sandbox_project
         static void Main(string[] args)
         {
             Console.Clear();
-            var heroePos = new Point(3, 3);
+            var heroePos = new Point(23, 3);
             var targetPos = new Point(50, 20);
 
             grid = new Grid(25, 54);
             grid.FillGrid();
             grid.FillVerticalBlock(2, 25, 12, Grid.WALL);
+            grid.FillVerticalBlock(1, 35, 10, Grid.WALL);
             //grid.FillHorizontalBlock(10, 2, 26, Grid.WALL);
             grid.FillHorizontalBlock(10, 15, 10, Grid.WALL);
-            grid.FillHorizontalBlock(10, 35, 16, Grid.WALL);
+            grid.FillHorizontalBlock(10, 1, 18, Grid.WALL);
             grid.FillHorizontalBlock(2, 15, 10, Grid.WALL);
             grid.FillHorizontalBlock(5, 2, 10, Grid.WALL);
-            grid.FillHorizontalBlock(8, 35, 10, Grid.WALL);
-            grid.FillHorizontalBlock(18, 23, 13, Grid.WALL);
+            grid.FillHorizontalBlock(8, 40, 12, Grid.WALL);
+            grid.FillHorizontalBlock(20, 23, 13, Grid.WALL);
             grid[heroePos] = 'H';
             grid[targetPos] = 'T';
 
@@ -238,7 +237,7 @@ namespace sandbox_project
             SetGrid(path, heroePos, targetPos, 'P');
 
             renderer.RenderGrid(grid);
-            Console.WriteLine($"WC: {WC} DC: {DC}");
+            Console.WriteLine($"Path length: {path.Count}");
 
             Console.ReadLine();
         }
@@ -260,9 +259,9 @@ namespace sandbox_project
                     grid[item] = 'R';
                 }
                 else if (grid[item] == Grid.FOREST)
-				{
+                {
                     continue;
-				}
+                }
                 else
                 {
                     grid[item] = c;

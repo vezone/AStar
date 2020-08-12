@@ -93,7 +93,7 @@ namespace AStar.src
                 return;
             }
 
-            for (int x = xpos; x < xpos + colLength; x++)
+            for (int x = xpos; x <= xpos + colLength; x++)
             {
                 this[new Point(x, ypos)] = c;
             }

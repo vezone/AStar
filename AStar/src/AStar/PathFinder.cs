@@ -1,9 +1,5 @@
 ﻿using AStar.src.PriorityQueue;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AStar.src.AStar
 {
@@ -15,53 +11,55 @@ namespace AStar.src.AStar
 		public PathFinder(Grid otherGrid)
 		{
             _grid = otherGrid;
-        }
-
-        private void GreedySearch(
-            Point target,
-            Dictionary<Point, Point> prevPosition,
-            SimplePriorityQueue<Point, double> toCheckNeighbors)
-        {
-            var current = toCheckNeighbors.Dequeue();
-            var neighbors = _grid.GetNeighbors(current);
-
-            foreach (var item in neighbors)
-            {
-                if (!prevPosition.ContainsKey(item))
-                {
-                    var distance = _grid.GetAccurateDistance(item, target);
-                    toCheckNeighbors.Enqueue(item, distance);
-                    prevPosition.Add(item, current);
-                    Visited.Add(item);
-                }
-            }
+            Visited = new List<Point>();
         }
 
         public List<Point> GetPath(Point from, Point to)
 		{
-            Visited = new List<Point>();
             var prevPosition = new Dictionary<Point, Point>();
-            var toCheckNeighborsWithCost = new SimplePriorityQueue<Point, double>();
+            var toCheck = new SimplePriorityQueue<Point, double>();
             var costForPoint = new Dictionary<Point, int>();
 
             Visited.Add(from);
-            toCheckNeighborsWithCost.Enqueue(from, 0);
+            toCheck.Enqueue(from, 0);
             costForPoint[from] = 0;
 
-            bool run = true;
-            while (run)
+            while (toCheck.Count > 0)
             {
-                if (toCheckNeighborsWithCost.Count <= 0)
+                //AStar
+                var currentPoint = toCheck.Dequeue();
+                var neighbors = _grid.GetNeighbors(currentPoint);
+
+                if (currentPoint == to)
                 {
                     break;
                 }
 
-                if (Visited.Contains(to))
+                foreach (var item in neighbors)
                 {
-                    break;
-                }
+                    var prevCost = costForPoint.ContainsKey(item) ? costForPoint[item] : 0;
+                    var newCost = prevCost + _grid.GetCostForPoint(item);
 
-                GreedySearch(to, prevPosition, toCheckNeighborsWithCost);
+                    //Point(30, 0) has less priority
+                    if (item == new Point(30, 2))
+                    {
+                        var t = 9;
+                    }
+
+                    if (!costForPoint.ContainsKey(item) || 
+                        newCost < costForPoint[item])
+                    {
+                        costForPoint[item] = newCost;
+                        var priority = newCost
+                            + _grid.GetDistance(to, item) 
+                            //+ _grid.GetAccurateDistance(from, item)
+                            ;
+                        toCheck.Enqueue(item, priority);
+                        prevPosition[item] = currentPoint;
+
+                        Visited.Add(item);
+                    }
+                }
             }
 
             var current = to;
