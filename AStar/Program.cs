@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using AStar.src;
+using AStar.src.AStar;
 
 namespace sandbox_project
 {
@@ -22,7 +23,13 @@ namespace sandbox_project
 
     class Program
     {
-        private static Grid _grid;
+        private static Grid grid;
+        private static Point heroePos = new Point(3, 3);
+        private static Point targetPos = new Point(50, 20);
+        private static Renderer renderer = new Renderer();
+
+        private static int WC = 0;
+        private static int DC = 0;
 
         public delegate List<Point> GetNeighborsDelegate(Point point);
 
@@ -48,11 +55,13 @@ namespace sandbox_project
 
             foreach (var item in neighbors)
             {
-                if (!prevPostDict.ContainsPoint(item))
+                if (!prevPostDict.ContainsKey(item))
                 {
                     toCheckNeighbors.Enqueue(item);
                     prevPostDict.Add(item, current);
                     visited.Add(item);
+
+                    WC++;
                 }
             }
         }
@@ -69,7 +78,7 @@ namespace sandbox_project
             return path;
         }
 
-        public static void SearchInWidthMain(Grid grid, Renderer renderer)
+        public static void SearchInWidthMain()
         {
             Console.Clear();
             var heroePos = new Point(3, 3);
@@ -92,15 +101,15 @@ namespace sandbox_project
                 }
 
                 //SearchInWidth(visited, toCheckNeighbors, _grid.GetNeighbors);
-                SearchInWidth2(visited, prevPosDict, toCheckNeighbors, _grid.GetNeighbors);
-                SetGrid(visited, heroePos, targetPos);
-
-                renderer.RenderGrid(_grid);
+                SearchInWidth2(visited, prevPosDict, toCheckNeighbors, grid.GetNeighbors);
+                
+                SetGrid(visited, heroePos, targetPos, '+');
+                renderer.RenderGrid(grid);
             }
 
             var path = GetPathInWidth(targetPos, heroePos, prevPosDict);
-            SetGrid(path, heroePos, targetPos);
-            renderer.RenderGrid(_grid);
+            SetGrid(path, heroePos, targetPos, 'P');
+            renderer.RenderGrid(grid);
         }
 
         public static void DijkstraSearch(List<Point> visited, 
@@ -115,27 +124,42 @@ namespace sandbox_project
             foreach (var item in neighbors)
             {
                 var cost = pointCost.ContainsKey(item) ? pointCost[item] : 0;
-                var newPointCost = cost + _grid.GetCostForPoint(item);
+                var newPointCost = cost + grid.GetCostForPoint(item);
                 if (!pointCost.ContainsKey(item) || newPointCost < pointCost[item])
                 {
+                    pointCost[item] = newPointCost;
                     toCheckNeighbors.Enqueue((item, newPointCost));
                     prevPostDict.Add(item, (current.Item1, newPointCost));
                     visited.Add(item);
+
+                    DC++;
+#if FALSE
+                    SetGrid(visited, heroePos, targetPos, '+');
+                    renderer.RenderGrid(_grid);
+#endif
                 }
             }
 
             toCheckNeighbors.OrderBy(o => o.Item2);
         }
 
-        public static void DijkstraMain(Grid grid, Renderer renderer)
+        public static List<Point> GetPathInDijkstra(Point targetPos, 
+            Point heroePos,
+            Dictionary<Point, (Point, int)> prevPosDictWithCost)
+        {
+            var current = targetPos;
+            var path = new List<Point>() { current };
+            while (current != heroePos)
+            {
+                current = prevPosDictWithCost[current].Item1;
+                path.Add(current);
+            }
+            return path;
+        }
+
+        public static void DijkstraMain()
         {
             Console.Clear();
-
-            var heroePos = new Point(3, 3);
-            var targetPos = new Point(50, 20);
-
-            SearchInWidthMain(_grid, renderer);
-
             var visited = new List<Point>();
             var prevPosDict = new Dictionary<Point, Point>();
 
@@ -164,47 +188,67 @@ namespace sandbox_project
                     break;
                 }
 
+                if (visited.Contains(targetPos))
+				{
+                    SetGrid(visited, heroePos, targetPos, '+');
+                    break;
+				}
+
                 DijkstraSearch(visited, 
                     prevPosDictWithCost, 
                     costForPoint,
-                    toCheckNeighborsWithCost, 
-                    _grid.GetNeighbors);
-                SetGrid(visited, heroePos, targetPos);
+                    toCheckNeighborsWithCost,
+                    grid.GetNeighbors);
 
-                renderer.RenderGrid(_grid);
+                SetGrid(visited, heroePos, targetPos, '+');
+                renderer.RenderGrid(grid);
             }
 
-            //var path = GetPathInWidth(targetPos, heroePos, prevPosDict);
-            //SetGrid(path, heroePos, targetPos);
-            renderer.RenderGrid(_grid);
-
-            Console.ReadLine();
+            var path = GetPathInDijkstra(targetPos, heroePos, prevPosDictWithCost);
+            SetGrid(path, heroePos, targetPos, 'P');
+            renderer.RenderGrid(grid);
         }
 
         static void Main(string[] args)
         {
             Console.Clear();
-            var renderer = new Renderer();
             var heroePos = new Point(3, 3);
             var targetPos = new Point(50, 20);
 
-            _grid = new Grid(25, 54);
-            _grid.FillGrid();
-            _grid.FillVerticalBlock(2, 25, 12);
-            _grid.FillHorizontalBlock(10, 10, 16);
-            _grid.FillHorizontalBlock(10, 35, 16);
-            _grid[heroePos] = 'H';
-            _grid[targetPos] = 'T';
+            grid = new Grid(25, 54);
+            grid.FillGrid();
+            grid.FillVerticalBlock(2, 25, 12, Grid.WALL);
+            //grid.FillHorizontalBlock(10, 2, 26, Grid.WALL);
+            grid.FillHorizontalBlock(10, 15, 10, Grid.WALL);
+            grid.FillHorizontalBlock(10, 35, 16, Grid.WALL);
+            grid.FillHorizontalBlock(2, 15, 10, Grid.WALL);
+            grid.FillHorizontalBlock(5, 2, 10, Grid.WALL);
+            grid.FillHorizontalBlock(8, 35, 10, Grid.WALL);
+            grid.FillHorizontalBlock(18, 23, 13, Grid.WALL);
+            grid[heroePos] = 'H';
+            grid[targetPos] = 'T';
 
-            //SearchInWidthMain(_grid, renderer);
-            DijkstraMain(_grid, renderer);
+            //renderer.RenderGrid(grid);
+            //SearchInWidthMain();
+            //DijkstraMain();
+
+            var finder = new PathFinder(grid);
+            var path = finder.GetPath(heroePos, targetPos);
+            SetGrid(finder.Visited, heroePos, targetPos, '+');
+            SetGrid(path, heroePos, targetPos, 'P');
+
+            renderer.RenderGrid(grid);
+            Console.WriteLine($"WC: {WC} DC: {DC}");
 
             Console.ReadLine();
         }
 
-        public static void SetGrid(List<Point> list, Point heroePos, Point targetPos)
+        public static void SetGrid(List<Point> list, 
+            Point heroePos, 
+            Point targetPos,
+            char c)
         {
-            for(int i = 0; i < list.Count; i++)
+            for (int i = 0; i < list.Count; i++)
             {
                 var item = list[i];
                 if (item == heroePos)
@@ -213,11 +257,15 @@ namespace sandbox_project
                 }
                 else if (item == targetPos)
                 {
-                    _grid[item] = 'R';
+                    grid[item] = 'R';
                 }
+                else if (grid[item] == Grid.FOREST)
+				{
+                    continue;
+				}
                 else
                 {
-                    _grid[item] = 'P';
+                    grid[item] = c;
                 }
             }
         }

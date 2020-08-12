@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using AStar.src.AStar;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -10,11 +12,12 @@ namespace AStar.src
         private int _rowLength;
         private int _columnLength;
 
-        const char WALL = 'W';
-        const char SPACE = '-';
-        const char TARGET = 'T';
-        const char HERO = 'H';
-        const char FOREST = 'F'; 
+        public const char SPACE = '-';
+        public const char VISITED = '+';
+        public const char WALL = 'W';
+        public const char TARGET = 'T';
+        public const char FROM = 'A';
+        public const char FOREST = 'F';
 
         public int RowLength => _rowLength;
         public int ColumnLength => _columnLength;
@@ -70,7 +73,7 @@ namespace AStar.src
             this[new Point(xpos, ypos)] = c;
         }
 
-        public void FillVerticalBlock(int ypos, int xpos, int rowLength)
+        public void FillVerticalBlock(int ypos, int xpos, int rowLength, char c)
         {
             if (ypos + rowLength >= RowLength)
             {
@@ -79,11 +82,11 @@ namespace AStar.src
 
             for (int y = ypos; y < ypos + rowLength; y++)
             {
-                this[new Point(xpos, y)] = WALL;
+                this[new Point(xpos, y)] = c;
             }
         }
 
-        public void FillHorizontalBlock(int ypos, int xpos, int colLength)
+        public void FillHorizontalBlock(int ypos, int xpos, int colLength, char c)
         {
             if (xpos + colLength >= ColumnLength)
             {
@@ -92,7 +95,7 @@ namespace AStar.src
 
             for (int x = xpos; x < xpos + colLength; x++)
             {
-                this[new Point(x, ypos)] = WALL;
+                this[new Point(x, ypos)] = c;
             }
         }
 
@@ -109,9 +112,9 @@ namespace AStar.src
             return false;
         }
 
-        private bool IsPointASpaceOrTarget(Point point)
+        private bool IsPointNotWall(Point point)
         {
-            if (this[point] == SPACE || this[point] == TARGET)
+            if (this[point] != WALL)
             {
                 return true;
             }
@@ -127,10 +130,10 @@ namespace AStar.src
             var p2 = new Point(point.X, point.Y + 1);
             var p3 = new Point(point.X - 1, point.Y);
 
-            if (IsPointInGrid(p0) && IsPointASpaceOrTarget(p0)) list.Add(p0);
-            if (IsPointInGrid(p1) && IsPointASpaceOrTarget(p1)) list.Add(p1);
-            if (IsPointInGrid(p2) && IsPointASpaceOrTarget(p2)) list.Add(p2);
-            if (IsPointInGrid(p3) && IsPointASpaceOrTarget(p3)) list.Add(p3);
+            if (IsPointInGrid(p0) && IsPointNotWall(p0)) list.Add(p0);
+            if (IsPointInGrid(p1) && IsPointNotWall(p1)) list.Add(p1);
+            if (IsPointInGrid(p2) && IsPointNotWall(p2)) list.Add(p2);
+            if (IsPointInGrid(p3) && IsPointNotWall(p3)) list.Add(p3);
 
             return list;
         }
@@ -147,14 +150,14 @@ namespace AStar.src
             var p6 = new Point(point.X - 1, point.Y - 1);
             var p7 = new Point(point.X - 1, point.Y);
 
-            if (IsPointInGrid(p0) && IsPointASpaceOrTarget(p0)) list.Add(p0);
-            if (IsPointInGrid(p1) && IsPointASpaceOrTarget(p1)) list.Add(p1);
-            if (IsPointInGrid(p2) && IsPointASpaceOrTarget(p2)) list.Add(p2);
-            if (IsPointInGrid(p3) && IsPointASpaceOrTarget(p3)) list.Add(p3);
-            if (IsPointInGrid(p4) && IsPointASpaceOrTarget(p4)) list.Add(p4);
-            if (IsPointInGrid(p5) && IsPointASpaceOrTarget(p5)) list.Add(p5);
-            if (IsPointInGrid(p6) && IsPointASpaceOrTarget(p6)) list.Add(p6);
-            if (IsPointInGrid(p7) && IsPointASpaceOrTarget(p7)) list.Add(p7);
+            if (IsPointInGrid(p0) && IsPointNotWall(p0)) list.Add(p0);
+            if (IsPointInGrid(p1) && IsPointNotWall(p1)) list.Add(p1);
+            if (IsPointInGrid(p2) && IsPointNotWall(p2)) list.Add(p2);
+            if (IsPointInGrid(p3) && IsPointNotWall(p3)) list.Add(p3);
+            if (IsPointInGrid(p4) && IsPointNotWall(p4)) list.Add(p4);
+            if (IsPointInGrid(p5) && IsPointNotWall(p5)) list.Add(p5);
+            if (IsPointInGrid(p6) && IsPointNotWall(p6)) list.Add(p6);
+            if (IsPointInGrid(p7) && IsPointNotWall(p7)) list.Add(p7);
 
             return list;
         }
@@ -167,10 +170,22 @@ namespace AStar.src
             }
             else if (this[to] == FOREST)
             {
-                return 3;
+                return 30;
             }
 
             return 2;
+        }
+
+        public int GetDistance(Point from, Point to)
+		{
+            //get distance by Manhattan formula
+            return Math.Abs(from.X - to.X) + Math.Abs(from.Y - from.X);
+		}
+
+        public double GetAccurateDistance(Point from, Point to)
+        {
+            //get distance by Manhattan formula
+            return Euclide.Distance(from, to);
         }
     }
 }

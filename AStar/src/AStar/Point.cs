@@ -1,4 +1,4 @@
-﻿namespace AStar.src
+﻿namespace AStar.src.AStar
 {
     public struct Point
     {
@@ -12,7 +12,8 @@
 
         public override bool Equals(object obj)
         {
-            return true; 
+            var otherPoint = (Point)obj;
+            return this == otherPoint; 
         }
 
         public static bool operator== (Point a, Point b)

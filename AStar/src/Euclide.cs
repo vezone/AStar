@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AStar.src.AStar;
+using System;
 namespace AStar.src
 {
     public class Euclide
