@@ -9,8 +9,11 @@ namespace AStar.src
     public class Grid
     {
         private char[][] _data;
-        private int _rowLength;
-        private int _columnLength;
+        private List<GetCostRule> _rules;
+
+        public delegate int? GetCostRule(Point to);
+        public int RowLength { get; private set; }
+        public int ColumnLength { get; private set; }
 
         public const char SPACE = '-';
         public const char VISITED = '+';
@@ -19,18 +22,22 @@ namespace AStar.src
         public const char FROM = 'A';
         public const char FOREST = 'F';
 
-        public int RowLength => _rowLength;
-        public int ColumnLength => _columnLength;
+        private List<Point> _neighbors = new List<Point>();
+        private Point _p0 = new Point(0, 0);
+        private Point _p1 = new Point(0, 0);
+        private Point _p2 = new Point(0, 0);
+        private Point _p3 = new Point(0, 0);
 
         public Grid(int rowLength, int columnLength)
         {
+            _rules = new List<GetCostRule>();
             _data = new char[rowLength][];
             for (int i = 0; i < rowLength; i++)
             {
                 _data[i] = new char[columnLength];
             }
-            _rowLength = rowLength;
-            _columnLength = columnLength;
+            RowLength = rowLength;
+            ColumnLength = columnLength;
         }
 
         public char[] this[int index]
@@ -59,11 +66,14 @@ namespace AStar.src
 
         public void FillGrid()
         {
+            var point = new Point(0, 0);
             for (int y = 0; y < RowLength; y++)
             {
                 for (int x = 0; x < ColumnLength; x++)
                 {
-                    this[new Point(x, y)] = SPACE;
+                    point.X = x;
+                    point.Y = y;
+                    this[point] = SPACE;
                 }
             }
         }
@@ -75,28 +85,57 @@ namespace AStar.src
 
         public void FillVerticalBlock(int ypos, int xpos, int rowLength, char c)
         {
-            if (ypos + rowLength >= RowLength)
+            if (ypos < 0 || xpos < 0
+                || ypos + rowLength >= RowLength || xpos >= ColumnLength)
             {
                 return;
             }
 
+            var point = new Point(0, 0);
             for (int y = ypos; y < ypos + rowLength; y++)
             {
-                this[new Point(xpos, y)] = c;
+                point.X = xpos;
+                point.Y = y;
+                this[point] = c;
             }
         }
 
         public void FillHorizontalBlock(int ypos, int xpos, int colLength, char c)
         {
-            if (xpos + colLength >= ColumnLength)
+            if (ypos < 0 || xpos < 0
+                || xpos + colLength >= ColumnLength || ypos >= RowLength)
             {
                 return;
             }
 
+            var point = new Point(0, 0);
             for (int x = xpos; x <= xpos + colLength; x++)
             {
-                this[new Point(x, ypos)] = c;
+                point.X = x;
+                point.Y = ypos;
+                this[point] = c;
             }
+        }
+
+        public void FillRectangle(int ypos, int xpos, int height, int width, char c)
+		{
+            if (ypos < 0 || xpos < 0 
+                || ypos + height >= RowLength 
+                || xpos + width >= ColumnLength)
+            {
+                return;
+            }
+
+            var point = new Point(0, 0);
+            for (int y = ypos; y <= ypos + height; y++)
+			{
+                for (int x = xpos; x <= xpos + width; x++)
+                {
+                    point.X = x;
+                    point.Y = y;
+                    this[point] = c;
+                }
+			}
         }
 
         private bool IsPointInGrid(Point point)
@@ -123,55 +162,40 @@ namespace AStar.src
 
         public List<Point> GetNeighbors(Point point)
         {
-            var list = new List<Point>();
+            _neighbors.Clear();
 
-            var p0 = new Point(point.X, point.Y - 1);
-            var p1 = new Point(point.X + 1, point.Y);
-            var p2 = new Point(point.X, point.Y + 1);
-            var p3 = new Point(point.X - 1, point.Y);
+            _p0.X = point.X;
+            _p0.Y = point.Y - 1;
+            _p1.X = point.X + 1;
+            _p1.Y = point.Y;
+            _p2.X = point.X;
+            _p2.Y = point.Y + 1;
+            _p3.X = point.X - 1;
+            _p3.Y = point.Y;
 
-            if (IsPointInGrid(p0) && IsPointNotWall(p0)) list.Add(p0);
-            if (IsPointInGrid(p1) && IsPointNotWall(p1)) list.Add(p1);
-            if (IsPointInGrid(p2) && IsPointNotWall(p2)) list.Add(p2);
-            if (IsPointInGrid(p3) && IsPointNotWall(p3)) list.Add(p3);
+            if (IsPointInGrid(_p0) && IsPointNotWall(_p0)) _neighbors.Add(_p0);
+            if (IsPointInGrid(_p1) && IsPointNotWall(_p1)) _neighbors.Add(_p1);
+            if (IsPointInGrid(_p2) && IsPointNotWall(_p2)) _neighbors.Add(_p2);
+            if (IsPointInGrid(_p3) && IsPointNotWall(_p3)) _neighbors.Add(_p3);
 
-            return list;
+            return _neighbors;
         }
 
-        public List<Point> GetWideNeighbors(Point point)
-        {
-            var list = new List<Point>();
-            var p0 = new Point(point.X - 1, point.Y - 1);
-            var p1 = new Point(point.X, point.Y - 1);
-            var p2 = new Point(point.X + 1, point.Y - 1);
-            var p3 = new Point(point.X + 1, point.Y);
-            var p4 = new Point(point.X + 1, point.Y + 1);
-            var p5 = new Point(point.X, point.Y - 1);
-            var p6 = new Point(point.X - 1, point.Y - 1);
-            var p7 = new Point(point.X - 1, point.Y);
-
-            if (IsPointInGrid(p0) && IsPointNotWall(p0)) list.Add(p0);
-            if (IsPointInGrid(p1) && IsPointNotWall(p1)) list.Add(p1);
-            if (IsPointInGrid(p2) && IsPointNotWall(p2)) list.Add(p2);
-            if (IsPointInGrid(p3) && IsPointNotWall(p3)) list.Add(p3);
-            if (IsPointInGrid(p4) && IsPointNotWall(p4)) list.Add(p4);
-            if (IsPointInGrid(p5) && IsPointNotWall(p5)) list.Add(p5);
-            if (IsPointInGrid(p6) && IsPointNotWall(p6)) list.Add(p6);
-            if (IsPointInGrid(p7) && IsPointNotWall(p7)) list.Add(p7);
-
-            return list;
+        public void AddRule(GetCostRule rule)
+		{
+            _rules.Add(rule);
         }
 
         public int GetCostForPoint(Point to)
         {
-            if (this[to] == SPACE)
-            {
-                return 1;
-            }
-            else if (this[to] == FOREST)
-            {
-                return 30;
-            }
+			foreach (var rule in _rules)
+			{
+                var result = rule(to);
+                if (result != null)
+				{
+                    return (int)result;
+				}
+			}
 
             return 2;
         }
@@ -179,13 +203,13 @@ namespace AStar.src
         public int GetDistance(Point from, Point to)
 		{
             //get distance by Manhattan formula
-            return Math.Abs(from.X - to.X) + Math.Abs(from.Y - from.X);
+            return Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
 		}
 
         public double GetAccurateDistance(Point from, Point to)
         {
-            //get distance by Manhattan formula
-            return Euclide.Distance(from, to);
+            //get distance by Euclide formula
+            return Math.Sqrt(Math.Pow(from.X - to.X, 2) + Math.Pow(from.Y - to.Y, 2));
         }
     }
 }

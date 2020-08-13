@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace AStar.src.AStar
 {
-	class PathFinder : IPathFinder
+	class PathFinder
 	{
         private Grid _grid;
         public List<Point> Visited { get; private set; }
@@ -40,20 +40,11 @@ namespace AStar.src.AStar
                     var prevCost = costForPoint.ContainsKey(item) ? costForPoint[item] : 0;
                     var newCost = prevCost + _grid.GetCostForPoint(item);
 
-                    //Point(30, 0) has less priority
-                    if (item == new Point(30, 2))
-                    {
-                        var t = 9;
-                    }
-
                     if (!costForPoint.ContainsKey(item) || 
                         newCost < costForPoint[item])
                     {
                         costForPoint[item] = newCost;
-                        var priority = newCost
-                            + _grid.GetDistance(to, item) 
-                            //+ _grid.GetAccurateDistance(from, item)
-                            ;
+                        var priority = newCost + _grid.GetDistance(to, item);
                         toCheck.Enqueue(item, priority);
                         prevPosition[item] = currentPoint;
 
